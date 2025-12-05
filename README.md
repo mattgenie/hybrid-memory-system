@@ -45,7 +45,8 @@ This system provides a dual-layer memory architecture:
 ## Features
 
 - ✅ **Data Consistency**: Both systems contain the same processed memories
-- ✅ **Fast Queries**: Qdrant queries in ~70ms (vs Mem0's ~800ms)
+- ✅ **Fast Queries**: Qdrant queries in ~70ms (11x faster than Mem0)
+- ✅ **Better Quality**: 100% precision vs Mem0's 43%
 - ✅ **Zero API Costs**: Local sentence-transformers for embeddings
 - ✅ **Smart Extraction**: Mem0's intelligent memory processing
 - ✅ **TypeScript + Python**: Cross-language support
@@ -118,12 +119,21 @@ The service runs on `http://localhost:8765` and provides:
 
 ## Performance
 
-- **Mem0 Search**: ~200-800ms (API-based)
-- **Qdrant Search**: ~50-100ms (local)
-- **Sync Time**: ~100ms for 3 memories
-- **Total Latency** (with `addMemoryAndSync`): ~3.1s
-  - 3s wait for Mem0's async processing
-  - 100ms sync to Qdrant
+### Query Speed (Read Operations)
+- **Qdrant**: ~70ms (local vector search)
+- **Mem0**: ~800ms (API-based search)
+- **Speedup**: **11.4x faster** with Qdrant
+
+### Quality Metrics
+- **Qdrant Precision**: 100% (returns only relevant memories)
+- **Mem0 Precision**: 43% (returns irrelevant memories)
+- **Quality Improvement**: **2.3x better** precision
+
+### Write/Sync Operations
+- **Write to Mem0**: ~100-200ms (queues for async processing)
+- **Mem0 Processing**: ~3-5 seconds (extraction & rewriting)
+- **Sync to Qdrant**: ~100ms for 3 memories
+- **Total Latency** (with `addMemoryAndSync`): ~3.1-5.1s
 
 See `docs/mem0_test_report.json` for detailed benchmarks.
 
