@@ -5,31 +5,51 @@ A high-performance hybrid memory implementation combining Mem0 (semantic memory)
 ## Overview
 
 This system provides a dual-layer memory architecture:
-- **Mem0**: Semantic memory for entity tracking and relationship management
-- **Qdrant**: Vector-based episodic memory for conversation recall
-- **Hybrid Service**: Intelligent orchestration layer that combines both systems
-
-## Features
-
-- ✅ **Sub-400ms Performance**: Optimized for real-time conversational AI
-- ✅ **Parallel Queries**: Concurrent Mem0 and Qdrant searches
-- ✅ **Smart Filtering**: Advanced metadata filtering for precise recall
-- ✅ **Reranking**: Intelligent result prioritization
-- ✅ **TypeScript + Python**: Cross-language support
+- **Mem0**: Semantic memory for intelligent extraction and entity tracking
+- **Qdrant**: Local vector-based memory for fast search (zero API costs)
+- **Hybrid Service**: Sync-based orchestration ensuring data consistency
 
 ## Architecture
 
+**Sync-Based Design** (ensures both systems have the same processed memories):
+
 ```
-┌─────────────────────────────────────┐
-│     Hybrid Memory Service           │
-│  (Orchestration & Coordination)     │
-└──────────┬──────────────┬───────────┘
-           │              │
-    ┌──────▼──────┐  ┌───▼──────────┐
-    │ Mem0 Service│  │Qdrant Service│
-    │  (Semantic) │  │  (Episodic)  │
-    └─────────────┘  └──────────────┘
+┌─────────────────────────────────────────────────────────┐
+│              HybridMemoryService                        │
+└─────────────────────────────────────────────────────────┘
+                          │
+        ┌─────────────────┼─────────────────┐
+        │                 │                 │
+        ▼                 ▼                 ▼
+   addMemory()    syncUserFromMem0()  retrieveProfile()
+        │                 │                 │
+        │                 │                 │
+        ▼                 ▼                 ▼
+   ┌─────────┐       ┌─────────┐      ┌─────────┐
+   │  Mem0   │──────▶│  Mem0   │      │ Qdrant  │
+   │ (Write) │       │ (Read)  │      │ (Read)  │
+   └─────────┘       └─────────┘      └─────────┘
+        │                 │                 │
+        │                 └────────┬────────┘
+        ▼                          ▼
+   Async Extract              Sync Processed
+   & Process                  Memories
 ```
+
+**Flow**:
+1. **Write**: `addMemory()` → Mem0 only
+2. **Process**: Mem0 extracts/rewrites asynchronously (e.g., "I have..." → "User has...")
+3. **Sync**: `syncUserFromMem0()` → Mirror processed memories to Qdrant
+4. **Read**: `retrieveProfile()` → Qdrant only (70ms vs Mem0's 800ms)
+
+## Features
+
+- ✅ **Data Consistency**: Both systems contain the same processed memories
+- ✅ **Fast Queries**: Qdrant queries in ~70ms (vs Mem0's ~800ms)
+- ✅ **Zero API Costs**: Local sentence-transformers for embeddings
+- ✅ **Smart Extraction**: Mem0's intelligent memory processing
+- ✅ **TypeScript + Python**: Cross-language support
+- ✅ **Flexible Sync**: Async or immediate sync patterns
 
 ## Installation
 
@@ -38,9 +58,16 @@ npm install
 ```
 
 ### Dependencies
-- `mem0ai`: Semantic memory
-- `@qdrant/js-client-rest`: Vector search
-- `openai`: Embeddings
+
+**TypeScript/Node.js**:
+- `mem0ai`: Semantic memory with intelligent extraction
+- `dotenv`: Environment configuration
+
+**Python** (for Qdrant service):
+- `qdrant-client`: Local vector database
+- `sentence-transformers`: Local embeddings (all-MiniLM-L6-v2)
+- `fastapi`: HTTP API for TypeScript integration
+- `uvicorn`: ASGI server
 
 ## Usage
 
@@ -49,85 +76,105 @@ npm install
 ```typescript
 import { HybridMemoryService } from './src/hybrid-memory-service';
 
-const memory = new HybridMemoryService();
+const hybrid = new HybridMemoryService();
 
-// Add memory
-await memory.add({
-  messages: conversation,
-  user_id: "user123"
-});
+// Pattern 1: Async sync (recommended for most cases)
+await hybrid.addMemory(
+    userId,
+    [{ role: 'user', content: 'I have a peanut allergy' }],
+    { topic: 'food', type: 'stable' }
+);
+// Later: await hybrid.syncUserFromMem0(userId);
 
-// Search memory
-const results = await memory.search({
-  query: "What restaurants did we discuss?",
-  user_id: "user123",
-  limit: 5
-});
+// Pattern 2: Immediate sync
+await hybrid.addMemoryAndSync(
+    userId,
+    [{ role: 'user', content: 'I love Thai food' }],
+    { topic: 'food', type: 'stable' },
+    3000  // Wait 3s for Mem0 processing
+);
+
+// Query (fast!)
+const profile = await hybrid.retrieveParticipantProfile(
+    userId,
+    "looking for dinner",
+    'places'
+);
 ```
 
-### Python
+### Python (Qdrant Service)
 
-```python
-from qdrant_service import QdrantMemoryService
+Start the Qdrant service:
 
-memory = QdrantMemoryService()
-
-# Add memory
-await memory.add_memory(
-    user_id="user123",
-    messages=conversation
-)
-
-# Search memory
-results = await memory.search(
-    query="What restaurants did we discuss?",
-    user_id="user123",
-    limit=5
-)
+```bash
+cd src
+python qdrant_service.py
 ```
+
+The service runs on `http://localhost:8765` and provides:
+- Local embeddings (no API costs)
+- Fast vector search
+- HTTP API for TypeScript integration
 
 ## Performance
 
-- **Mem0 Search**: ~200-300ms
-- **Qdrant Search**: ~50-100ms
-- **Hybrid Search**: ~250-400ms (parallel)
+- **Mem0 Search**: ~200-800ms (API-based)
+- **Qdrant Search**: ~50-100ms (local)
+- **Sync Time**: ~100ms for 3 memories
+- **Total Latency** (with `addMemoryAndSync`): ~3.1s
+  - 3s wait for Mem0's async processing
+  - 100ms sync to Qdrant
 
 See `docs/mem0_test_report.json` for detailed benchmarks.
 
 ## Testing
 
 ```bash
-# Run all tests
-npm test
+# Run corrected architecture test
+npx ts-node tests/test-hybrid-memory-corrected.ts
+
+# Test Mem0's async behavior
+npx ts-node tests/test-mem0-add-response.ts
 
 # Run specific tests
-npm run test:mem0
-npm run test:qdrant
-npm run test:hybrid
+npx ts-node tests/test-mem0-recall.ts
+npx ts-node tests/test-qdrant-recall.ts
 ```
 
 ## Files
 
 ### Core Services
-- `src/hybrid-memory-service.ts` - Main orchestration layer
+- `src/hybrid-memory-service.ts` - Sync-based orchestration layer
 - `src/mem0-service.ts` - Mem0 semantic memory wrapper
-- `src/qdrant-memory-service.ts` - Qdrant vector search wrapper
-- `src/qdrant_service.py` - Python Qdrant implementation
+- `src/qdrant-memory-service.ts` - TypeScript Qdrant client
+- `src/qdrant_service.py` - Python FastAPI backend with local embeddings
 
 ### Tests
-- `tests/test-hybrid-memory.ts` - Hybrid system tests
-- `tests/test-mem0-recall.ts` - Mem0 recall tests
-- `tests/test-qdrant-recall.ts` - Qdrant recall tests
+- `tests/test-hybrid-memory-corrected.ts` - Demonstrates corrected architecture
+- `tests/test-mem0-add-response.ts` - Proves Mem0's async extraction
+- `tests/test-mem0-recall.ts` - Recall/precision tests
+- `tests/test-qdrant-recall.ts` - Qdrant-specific tests
 - `tests/verify-mem0-400ms.ts` - Performance verification
-- `tests/analyze-mem0-performance.ts` - Performance analysis
 
 ## Configuration
 
 Environment variables:
 ```bash
-OPENAI_API_KEY=your_key_here
-QDRANT_URL=http://localhost:6333
+MEM0_API_KEY=your_mem0_key_here
+# No OpenAI key needed - uses local sentence-transformers!
 ```
+
+## Why This Architecture?
+
+**Problem**: Mem0's `add()` is async and extracts/rewrites memories:
+- Input: `"I have a peanut allergy"`
+- Mem0 extracts: `"User has a severe peanut allergy"`
+
+**Solution**: Write to Mem0 only, then sync processed memories to Qdrant:
+- ✅ Both systems have the same processed text
+- ✅ Leverages Mem0's intelligent extraction
+- ✅ Qdrant provides fast local search
+- ✅ Zero API costs for embeddings and search
 
 ## License
 
