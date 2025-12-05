@@ -1,0 +1,41 @@
+{
+    "name": "hybrid-memory-system",
+    "version": "1.0.0",
+    "description": "High-performance hybrid memory implementation combining Mem0 and Qdrant for conversational AI",
+    "main": "src/hybrid-memory-service.ts",
+    "scripts": {
+        "test": "ts-node tests/test-hybrid-memory.ts",
+        "test:mem0": "ts-node tests/test-mem0-recall.ts",
+        "test:qdrant": "ts-node tests/test-qdrant-recall.ts",
+        "test:performance": "ts-node tests/verify-mem0-400ms.ts",
+        "build": "tsc",
+        "dev": "ts-node-dev --respawn src/hybrid-memory-service.ts"
+    },
+    "keywords": [
+        "memory",
+        "mem0",
+        "qdrant",
+        "vector-search",
+        "semantic-memory",
+        "conversational-ai",
+        "llm",
+        "rag"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "mem0ai": "^0.1.0",
+        "@qdrant/js-client-rest": "^1.11.0",
+        "openai": "^4.0.0",
+        "dotenv": "^16.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0",
+        "ts-node": "^10.0.0",
+        "ts-node-dev": "^2.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

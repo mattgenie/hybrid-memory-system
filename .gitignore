@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.log
+.env
+.DS_Store
+*.pyc
+__pycache__/
+.vscode/
+.idea/
+qdrant_data/
