@@ -1,0 +1,93 @@
+{
+  "timestamp": "2025-12-04T17:29:37.981Z",
+  "summary": {
+    "total_tests": 9,
+    "passed": 4,
+    "failed": 5,
+    "pass_rate": 0.4444444444444444,
+    "seed_latency_ms": 11953,
+    "avg_query_latency_ms": 1248.2222222222222,
+    "min_query_latency_ms": 535,
+    "max_query_latency_ms": 1452
+  },
+  "test_results": [
+    {
+      "testName": "Stable Preference: Peanut Allergy",
+      "passed": true,
+      "latencyMs": 1452,
+      "details": "Found in stable_traits"
+    },
+    {
+      "testName": "Stable Preference: Vegetarian",
+      "passed": true,
+      "latencyMs": 1452,
+      "details": "Found in stable_traits"
+    },
+    {
+      "testName": "Food Preference: Spicy Thai",
+      "passed": true,
+      "latencyMs": 1452,
+      "details": "Found in preferences"
+    },
+    {
+      "testName": "Location Feature: Outdoor Seating",
+      "passed": false,
+      "latencyMs": 1452,
+      "details": "Missing from places preferences"
+    },
+    {
+      "testName": "Location Preference: Mission District",
+      "passed": false,
+      "latencyMs": 1452,
+      "details": "Missing from places preferences"
+    },
+    {
+      "testName": "Noise Filtering: Bob's Music",
+      "passed": true,
+      "latencyMs": 1452,
+      "details": "Correctly filtered out"
+    },
+    {
+      "testName": "Movie Preference: Christopher Nolan",
+      "passed": false,
+      "latencyMs": 535,
+      "details": "Missing from movies preferences"
+    },
+    {
+      "testName": "Movie Dislike: Horror",
+      "passed": false,
+      "latencyMs": 535,
+      "details": "Missing from movies preferences"
+    },
+    {
+      "testName": "Contextual: Sushi Craving",
+      "passed": false,
+      "latencyMs": 1452,
+      "details": "Missing (may need keyword tuning)"
+    }
+  ],
+  "profiles": {
+    "dinner_context": {
+      "userId": "perf-test-user-001",
+      "stable_traits": "User loves spicy Thai food; User has a severe peanut allergy; User is vegetarian and does not eat meat",
+      "places_preferences": {
+        "stable_preferences": "User loves spicy Thai food; User has a severe peanut allergy",
+        "contextual_preferences": "User loves spicy Thai food; User has a severe peanut allergy"
+      },
+      "movies_preferences": null,
+      "music_preferences": null
+    },
+    "movie_context": {
+      "userId": "perf-test-user-001",
+      "stable_traits": "User loves spicy Thai food; User has a severe peanut allergy; User is vegetarian and does not eat meat",
+      "places_preferences": {
+        "stable_preferences": "User loves spicy Thai food; User has a severe peanut allergy",
+        "contextual_preferences": "User loves spicy Thai food; User has a severe peanut allergy"
+      },
+      "movies_preferences": {
+        "contextual_preferences": "User loves Christopher Nolan movies"
+      },
+      "music_preferences": null
+    }
+  }
+}
