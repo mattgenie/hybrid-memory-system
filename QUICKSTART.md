@@ -1,242 +1,223 @@
-# ⚡ Quickstart Guide
+# 🚀 Hybrid Memory System - Quick Start
 
-Get the Hybrid Memory System running in 5 minutes!
+Get your automatic Mem0 → Qdrant sync running on AWS in 15 minutes.
 
-## 🎯 Goal
+## Prerequisites
 
-By the end of this guide, you'll have:
-- ✅ Qdrant service running locally
-- ✅ Classifier service running (CPU or GPU)
-- ✅ Successfully added and searched memories
-- ✅ Run the test suite
+1. **AWS CLI** with SSO configured
+2. **SSH Key** at `~/Downloads/new-conversation-key.pem`
+3. **Mem0 API Key** from [mem0.ai](https://mem0.ai)
 
-## 📋 Prerequisites
+## Step 1: Configure Mem0 API Key
 
-```bash
-# Check Python version (3.8+ required)
-python3 --version
-
-# Check Node.js version (16+ required, for tests)
-node --version
-
-# Check if you have git
-git --version
-```
-
-## 🚀 5-Minute Setup
-
-### Step 1: Clone and Install (2 minutes)
+Edit `deploy-hybrid-memory.sh` and add your Mem0 API key:
 
 ```bash
-# Clone the repository
-git clone <repo-url>
-cd hybrid-memory-system
-
-# Create Python virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install Python dependencies
-pip install python-dotenv qdrant-client sentence-transformers \
-            fastapi uvicorn transformers torch httpx
-
-# Install Node dependencies (for tests)
-npm install
+# Line 209 in deploy-hybrid-memory.sh
+MEM0_API_KEY=m0-YOUR_KEY_HERE
 ```
 
-### Step 2: Start Services (2 minutes)
+## Step 2: Deploy to AWS
 
-**Terminal 1 - Qdrant Service:**
 ```bash
 cd hybrid-memory-system
-source venv/bin/activate
-python src/qdrant_service.py
-```
-
-Wait for: `✓ Embedding model loaded!`
-
-**Terminal 2 - Classifier Service (Optional):**
-```bash
-cd hybrid-memory-system
-source venv/bin/activate
-python src/classifier_service.py
-```
-
-Wait for: `✓ Model loaded on cpu`
-
-> **Note**: Classifier service is optional. Qdrant will use fast heuristics if it's not available.
-
-### Step 3: Test It! (1 minute)
-
-**Terminal 3 - Quick Test:**
-```bash
-# Add a memory
-curl -X POST http://localhost:8765/add_memory \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "quickstart-user",
-    "text": "I love spicy Thai food",
-    "topic": "food",
-    "type": "stable"
-  }'
-
-# Search for it
-curl -X POST http://localhost:8765/search \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "quickstart-user",
-    "context": "food preferences",
-    "limit": 5,
-    "use_classifiers": true
-  }'
-```
-
-**Expected Response:**
-```json
-{
-  "memories": [
-    {
-      "text": "I love spicy Thai food",
-      "score": 0.85,
-      "classifiers": ["food preference", "cuisine type"],
-      "topic": "food"
-    }
-  ]
-}
-```
-
-## 🎉 Success!
-
-If you see the memory returned, you're all set! 
-
-## 🧪 Run the Test Suite
-
-```bash
-# Comprehensive comparison test (Mem0 vs Qdrant)
-npx ts-node test-final-comparison.ts
-
-# Classifier quality test
-npx ts-node test-classifier-quality.ts
-
-# Batch performance test
-npx ts-node test-batch-fix.ts
-```
-
-## 🌐 Try the Web UI
-
-Open `hybrid-memory-demo.html` in your browser for a visual interface!
-
-## 📊 What's Happening?
-
-### When you add a memory:
-
-1. **Instant Response** (~50-200ms)
-   - Heuristic classifiers generated
-   - Text embedded with all-MiniLM-L6-v2
-   - Stored in Qdrant
-
-2. **Background (Async)**
-   - LLM generates better classifiers
-   - Re-embeds with improved classifiers
-   - Updates Qdrant entry
-
-### When you search:
-
-1. **Multi-Vector Search**
-   - Query embedded
-   - Searches across: text + classifier_1 + classifier_2
-   - Returns best matches from all vectors
-
-2. **Score Filtering**
-   - Applies threshold (default: 0.27)
-   - Returns only high-quality matches
-
-## 🚀 Next Steps
-
-### Deploy to AWS
-
-```bash
-# Deploy Qdrant (t3.medium)
 ./deploy-hybrid-memory.sh t3.medium
-
-# Deploy GPU Classifier (g4dn.xlarge) - Optional but recommended
-./deploy-classifier-gpu.sh
 ```
 
-### Customize
+The script will:
+- ✅ Create AWS t3.medium instance
+- ✅ Install Python dependencies
+- ✅ Upload code
+- ✅ Start Qdrant service (port 8765)
+- ✅ Start Mem0 sync daemon
+- ✅ Begin automatic syncing every 60 seconds
 
-```python
-# src/qdrant_service.py
+**Time**: ~15 minutes
 
-# Adjust score threshold
-score_threshold = 0.27  # Higher = more precision, lower = more recall
+## Step 3: Verify Deployment
 
-# Change embedding model
-embedding_model = SentenceTransformer('your-model-here')
-```
-
-### Monitor Performance
+The script outputs your instance IP. Use it to verify:
 
 ```bash
-# Check service health
-curl http://localhost:8765/health
+# Replace YOUR_IP with the IP from deployment output
 
-# View logs
-tail -f qdrant.log
-tail -f classifier.log
+# 1. Check health
+curl http://YOUR_IP:8765/health
+
+# Expected: {"status": "ok", "embedding_model": "all-MiniLM-L6-v2"}
+
+# 2. List users (wait 60s for first sync)
+curl http://YOUR_IP:8765/list_users
+
+# Expected: {"users": [...], "total_users": N, "total_memories": N}
+
+# 3. Search memories
+curl -X POST http://YOUR_IP:8765/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "YOUR_USER_ID",
+    "context": "food",
+    "limit": 5
+  }'
 ```
 
-## 🐛 Troubleshooting
-
-### Service won't start
+## Step 4: Monitor Sync Daemon
 
 ```bash
-# Check if port is already in use
-lsof -i :8765  # Qdrant
-lsof -i :8766  # Classifier
+# SSH to instance
+ssh -i ~/Downloads/new-conversation-key.pem ubuntu@YOUR_IP
 
-# Kill existing process
-pkill -f qdrant_service
-pkill -f classifier_service
+# Watch sync logs
+tail -f ~/hybrid-memory/mem0_sync.log
 ```
 
-### Slow performance
+Expected output every 60 seconds:
+```
+[Sync] ===== Starting sync cycle at 2024-12-09 16:00:00 =====
+[Sync] Found 3 users to sync
+[Sync] Syncing Matt...
+[Sync] Matt: 9 synced, 0 errors
+[Sync] Syncing Noa...
+[Sync] Noa: 10 synced, 0 errors
+[Sync] Syncing John...
+[Sync] John: 8 synced, 0 errors
+[Sync] ===== Cycle complete: 27 total synced, 0 total errors =====
+[Sync] Sleeping for 60 seconds...
+```
+
+## Step 5: Use in Your Application
+
+Update your application's `.env` file:
 
 ```bash
-# Check if classifier service is running
-curl http://localhost:8766/health
-
-# If not, Qdrant falls back to heuristics (still fast!)
+QDRANT_URL=http://YOUR_IP:8765
 ```
 
-### Import errors
+Then use the Qdrant API:
+
+```typescript
+import axios from 'axios';
+
+const QDRANT_URL = process.env.QDRANT_URL;
+
+// List all users
+const users = await axios.get(`${QDRANT_URL}/list_users`);
+console.log(users.data);
+
+// Search memories
+const memories = await axios.post(`${QDRANT_URL}/search`, {
+  user_id: 'Matt',
+  context: 'food preferences',
+  limit: 10
+});
+console.log(memories.data.memories);
+```
+
+## Configuration
+
+### Change Sync Frequency
+
+Default is 60 seconds. To change:
 
 ```bash
-# Reinstall dependencies
-pip install --upgrade -r requirements.txt
+ssh -i ~/Downloads/new-conversation-key.pem ubuntu@YOUR_IP
+
+# Edit .env
+echo "SYNC_INTERVAL_SECONDS=30" >> ~/hybrid-memory/.env
+
+# Restart daemon
+pkill -f mem0_sync_daemon
+cd ~/hybrid-memory && source venv/bin/activate
+nohup python src/mem0_sync_daemon.py > mem0_sync.log 2>&1 &
 ```
 
-## 💡 Tips
+### Add New Users
 
-1. **Start with heuristics only** - Fast and good enough for most use cases
-2. **Add GPU classifier later** - When you need the extra quality
-3. **Use batch endpoints** - For bulk operations (10-15x faster)
-4. **Tune score threshold** - Based on your precision/recall needs
+Just add memories to Mem0 - they'll automatically sync!
 
-## 📚 Learn More
+```bash
+curl -X POST https://api.mem0.ai/v1/memories/ \
+  -H "Authorization: Token YOUR_MEM0_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [{"role": "user", "content": "I love pizza"}],
+    "user_id": "Alice"
+  }'
 
-- [Architecture Details](SEPARATED_ARCHITECTURE.md)
-- [Production Deployment](PRODUCTION_CONFIG.md)
-- [Test Suite Documentation](TEST_SUITE.md)
-- [API Reference](README.md#api-usage)
+# Wait 60 seconds, then check Qdrant
+curl http://YOUR_IP:8765/list_users
+# Alice will appear!
+```
 
-## ✅ Checklist
+## Monitoring Commands
 
-- [ ] Services running locally
-- [ ] Successfully added a memory
-- [ ] Successfully searched memories
-- [ ] Ran at least one test
-- [ ] Explored the web UI
-- [ ] Read the architecture docs
+```bash
+# Check both services are running
+ssh ubuntu@YOUR_IP 'ps aux | grep python'
 
-**Congratulations! You're ready to build with the Hybrid Memory System! 🎉**
+# Qdrant logs
+ssh ubuntu@YOUR_IP 'tail -f ~/hybrid-memory/qdrant.log'
+
+# Sync daemon logs
+ssh ubuntu@YOUR_IP 'tail -f ~/hybrid-memory/mem0_sync.log'
+
+# Restart Qdrant
+ssh ubuntu@YOUR_IP 'pkill -f qdrant_service && cd ~/hybrid-memory && source venv/bin/activate && nohup python src/qdrant_service.py > qdrant.log 2>&1 &'
+
+# Restart sync daemon
+ssh ubuntu@YOUR_IP 'pkill -f mem0_sync && cd ~/hybrid-memory && source venv/bin/activate && nohup python src/mem0_sync_daemon.py > mem0_sync.log 2>&1 &'
+```
+
+## Terminate Instance
+
+When done testing:
+
+```bash
+AWS_PROFILE=work aws ec2 terminate-instances --instance-ids YOUR_INSTANCE_ID
+```
+
+**Cost**: ~$0.04/hour (~$1/day if left running)
+
+## Troubleshooting
+
+### No users appearing?
+
+1. Check Mem0 has memories:
+```bash
+curl -H "Authorization: Token YOUR_MEM0_KEY" \
+  "https://api.mem0.ai/v1/memories/?user_id=YOUR_USER"
+```
+
+2. Check sync daemon is running:
+```bash
+ssh ubuntu@YOUR_IP 'ps aux | grep mem0_sync'
+```
+
+3. Check sync logs for errors:
+```bash
+ssh ubuntu@YOUR_IP 'tail -50 ~/hybrid-memory/mem0_sync.log'
+```
+
+### Qdrant not responding?
+
+1. Check service is running:
+```bash
+ssh ubuntu@YOUR_IP 'ps aux | grep qdrant'
+```
+
+2. Check logs:
+```bash
+ssh ubuntu@YOUR_IP 'tail -50 ~/hybrid-memory/qdrant.log'
+```
+
+3. Restart if needed (see Monitoring Commands above)
+
+## Next Steps
+
+- See [README.md](README.md) for architecture details
+- See [PRODUCTION_CONFIG.md](PRODUCTION_CONFIG.md) for production setup
+- Check `deploy-hybrid-memory.sh` for deployment customization
+
+---
+
+**You're done!** Your Mem0 memories are now automatically syncing to Qdrant every 60 seconds. 🎉

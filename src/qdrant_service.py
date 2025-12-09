@@ -409,6 +409,39 @@ async def search(req: SearchRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/list_users")
+async def list_users():
+    """List all users with their memory counts."""
+    try:
+        # Scroll through all points to get unique users
+        scroll_result = client.scroll(
+            collection_name=collection_name,
+            limit=10000,  # Adjust if you have more memories
+            with_payload=True,
+            with_vectors=False
+        )
+        
+        # Count memories per user
+        user_counts = {}
+        for point in scroll_result[0]:
+            user_id = point.payload.get("user_id")
+            if user_id:
+                user_counts[user_id] = user_counts.get(user_id, 0) + 1
+        
+        # Format response
+        users = [
+            {"user_id": user_id, "memory_count": count}
+            for user_id, count in sorted(user_counts.items(), key=lambda x: x[1], reverse=True)
+        ]
+        
+        return {
+            "users": users,
+            "total_users": len(users),
+            "total_memories": sum(user_counts.values())
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/health")
 async def health():
     """Health check."""

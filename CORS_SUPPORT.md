@@ -1,77 +1,88 @@
-# CORS Support Added to Hybrid Memory System
+# CORS Support - Hybrid Memory System
 
-## ✅ Changes Made
+The Qdrant service includes CORS support for web applications.
 
-### Updated File
-`hybrid-memory-system/src/qdrant_service.py`
+## Configuration
 
-### Changes
-1. **Added CORS import**:
-   ```python
-   from fastapi.middleware.cors import CORSMiddleware
-   ```
+CORS is enabled by default in `qdrant_service.py`:
 
-2. **Added CORS middleware** (after app creation):
-   ```python
-   app.add_middleware(
-       CORSMiddleware,
-       allow_origins=["*"],  # Allow all origins
-       allow_credentials=True,
-       allow_methods=["*"],  # Allow all methods
-       allow_headers=["*"],  # Allow all headers
-   )
-   ```
-
-## 🌐 What This Enables
-
-Your colleague can now:
-- ✅ Access the API from **any website/domain**
-- ✅ Use the **Web UI** from their browser
-- ✅ Make **fetch/axios requests** from JavaScript
-- ✅ Test with **Postman** or any HTTP client
-- ✅ Build **custom frontends** that call the API
-
-## 🔒 Security Note
-
-Current configuration allows **all origins** (`*`) for ease of testing.
-
-For production, you may want to restrict to specific domains:
 ```python
-allow_origins=[
-    "https://your-frontend.com",
-    "http://localhost:3000",  # For local development
-]
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 ```
 
-## 🚀 Service Status
+## Production Configuration
 
-The updated service is being deployed to:
-- **URL**: http://54.145.235.188:8765
-- **Web UI**: http://54.145.235.188:8080/hybrid-memory-demo.html
+For production, restrict origins to your application domain:
 
-## 📝 Testing CORS
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://yourdomain.com",
+        "https://app.yourdomain.com"
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization"],
+)
+```
 
-Your colleague can test CORS is working by opening browser console on any website and running:
+## Testing CORS
 
-```javascript
-fetch('http://54.145.235.188:8765/health')
+```bash
+# Test from browser console
+fetch('http://YOUR_IP:8765/health')
   .then(r => r.json())
-  .then(data => console.log('CORS working!', data))
-  .catch(e => console.error('CORS failed:', e));
+  .then(console.log)
+
+# Test with curl
+curl -H "Origin: https://yourdomain.com" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: Content-Type" \
+  -X OPTIONS \
+  http://YOUR_IP:8765/search
 ```
 
-If CORS is working, they'll see the health response. If not, they'll see a CORS error.
+## Update CORS Settings
 
-## ✅ Ready for Colleague Access
+1. SSH to instance:
+```bash
+ssh -i ~/Downloads/new-conversation-key.pem ubuntu@YOUR_IP
+```
 
-Once the service restarts, your colleague will have full browser access to:
-1. Health endpoint
-2. Add memory API
-3. Search API
-4. Batch operations
-5. Web UI
+2. Edit `src/qdrant_service.py` to update CORS settings
+
+3. Restart service:
+```bash
+pkill -f qdrant_service
+cd ~/hybrid-memory && source venv/bin/activate
+nohup python src/qdrant_service.py > qdrant.log 2>&1 &
+```
+
+## Common Issues
+
+### CORS Error in Browser
+
+If you see: `Access to fetch at 'http://...' from origin '...' has been blocked by CORS policy`
+
+**Solution**: Add your origin to `allow_origins` list
+
+### Credentials Not Allowed
+
+If using cookies/auth, ensure:
+```python
+allow_credentials=True
+allow_origins=["https://specific-domain.com"]  # Cannot use "*" with credentials
+```
 
 ---
 
-**Status**: Service restarting with CORS enabled
-**Last Updated**: 2025-12-08 20:42 EST
+**CORS is enabled by default for easy development** 🌐
