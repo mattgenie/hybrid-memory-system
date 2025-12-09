@@ -1,0 +1,270 @@
+{
+    "info": {
+        "name": "Hybrid Memory System API",
+        "description": "GPU-accelerated vector search with multi-vector classification\n\nPerformance:\n- Insert: ~169ms\n- Search: ~287ms\n- Recall: 100%\n- Cost: FREE",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Health",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Check service status and configuration"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Memory",
+            "item": [
+                {
+                    "name": "Add Memory - Food Allergy",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"text\": \"I have a severe peanut allergy\",\n  \"topic\": \"food\",\n  \"type\": \"stable\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/add_memory",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "add_memory"
+                            ]
+                        },
+                        "description": "Add a memory about food allergy"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Add Memory - Food Preference",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"text\": \"I love spicy Thai food\",\n  \"topic\": \"food\",\n  \"type\": \"stable\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/add_memory",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "add_memory"
+                            ]
+                        },
+                        "description": "Add a memory about food preference"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Add Memory - Vegetarian",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"text\": \"I am vegetarian\",\n  \"topic\": \"food\",\n  \"type\": \"stable\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/add_memory",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "add_memory"
+                            ]
+                        },
+                        "description": "Add a memory about dietary preference"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Add Memories Batch",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"memories\": [\n    {\n      \"user_id\": \"{{user_id}}\",\n      \"text\": \"I prefer organic vegetables\",\n      \"topic\": \"food\",\n      \"type\": \"stable\"\n    },\n    {\n      \"user_id\": \"{{user_id}}\",\n      \"text\": \"I avoid processed foods\",\n      \"topic\": \"food\",\n      \"type\": \"stable\"\n    },\n    {\n      \"user_id\": \"{{user_id}}\",\n      \"text\": \"I like farm-to-table restaurants\",\n      \"topic\": \"food\",\n      \"type\": \"stable\"\n    }\n  ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/add_memories_batch",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "add_memories_batch"
+                            ]
+                        },
+                        "description": "Add multiple memories in batch (10-15x faster)"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Search",
+            "item": [
+                {
+                    "name": "Search - Dietary Restrictions",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"context\": \"dietary restrictions\",\n  \"limit\": 10,\n  \"use_classifiers\": true,\n  \"score_threshold\": 0.27\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/search",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search"
+                            ]
+                        },
+                        "description": "Search for dietary restrictions"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Search - Food Preferences",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"context\": \"food preferences\",\n  \"domain\": \"places\",\n  \"limit\": 10,\n  \"use_classifiers\": true,\n  \"score_threshold\": 0.27\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/search",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search"
+                            ]
+                        },
+                        "description": "Search for food preferences with domain filter"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Search - High Precision",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"context\": \"food\",\n  \"limit\": 5,\n  \"use_classifiers\": true,\n  \"score_threshold\": 0.4\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/search",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search"
+                            ]
+                        },
+                        "description": "Search with high precision (higher threshold = fewer, better results)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Search - High Recall",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"context\": \"food\",\n  \"limit\": 20,\n  \"use_classifiers\": true,\n  \"score_threshold\": 0.15\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/search",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search"
+                            ]
+                        },
+                        "description": "Search with high recall (lower threshold = more results)"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://54.145.235.188:8765",
+            "type": "string"
+        },
+        {
+            "key": "user_id",
+            "value": "postman-test",
+            "type": "string"
+        }
+    ]
+}
