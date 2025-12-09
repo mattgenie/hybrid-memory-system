@@ -27,7 +27,7 @@
     "author": "",
     "license": "MIT",
     "dependencies": {
-        "mem0ai": "^0.1.0",
+        "mem0ai": "^2.1.38",
         "dotenv": "^16.0.0"
     },
     "devDependencies": {

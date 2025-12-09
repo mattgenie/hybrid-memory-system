@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Memory System - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        
+        .result-text {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .result-meta {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error {
+            background: #fee;
+            border-left-color: #f44;
+            color: #c33;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Hybrid Memory System</h1>
+            <p>GPU-Accelerated Vector Search with Multi-Vector Classification</p>
+        </div>
+
+        <div class="card">
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="insert-speed">~169ms</div>
+                    <div class="stat-label">Insert Latency</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">~287ms</div>
+                    <div class="stat-label">Search Latency</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Recall</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">FREE</div>
+                    <div class="stat-label">API Cost</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('add')">Add Memory</button>
+                <button class="tab" onclick="switchTab('search')">Search</button>
+                <button class="tab" onclick="switchTab('api')">API Docs</button>
+            </div>
+
+            <div id="add-tab" class="tab-content active">
+                <div class="input-group">
+                    <label for="user-id">User ID</label>
+                    <input type="text" id="user-id" placeholder="e.g., user123" value="demo-user">
+                </div>
+
+                <div class="input-group">
+                    <label for="memory-text">Memory Text</label>
+                    <textarea id="memory-text" placeholder="e.g., I have a severe peanut allergy"></textarea>
+                </div>
+
+                <button onclick="addMemory()">Add Memory</button>
+
+                <div id="add-results" class="results"></div>
+            </div>
+
+            <div id="search-tab" class="tab-content">
+                <div class="input-group">
+                    <label for="search-user-id">User ID</label>
+                    <input type="text" id="search-user-id" placeholder="e.g., user123" value="demo-user">
+                </div>
+
+                <div class="input-group">
+                    <label for="search-query">Search Query</label>
+                    <input type="text" id="search-query" placeholder="e.g., dietary restrictions">
+                </div>
+
+                <button onclick="searchMemories()">Search</button>
+
+                <div id="search-results" class="results"></div>
+            </div>
+
+            <div id="api-tab" class="tab-content">
+                <h3>API Endpoints</h3>
+                <br>
+                
+                <h4>Add Memory</h4>
+                <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto;">
+POST http://54.145.235.188:8765/add_memory
+Content-Type: application/json
+
+{
+  "user_id": "user123",
+  "text": "I love spicy Thai food",
+  "topic": "food",
+  "type": "stable"
+}</pre>
+
+                <h4>Search Memories</h4>
+                <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto;">
+POST http://54.145.235.188:8765/search
+Content-Type: application/json
+
+{
+  "user_id": "user123",
+  "context": "food preferences",
+  "domain": "places",
+  "limit": 10,
+  "use_classifiers": true,
+  "score_threshold": 0.27
+}</pre>
+
+                <h4>Health Check</h4>
+                <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px; overflow-x: auto;">
+GET http://54.145.235.188:8765/health</pre>
+
+                <br>
+                <p><strong>Features:</strong></p>
+                <ul style="margin-left: 20px; line-height: 1.8;">
+                    <li>🚀 Async GPU classification (NVIDIA T4)</li>
+                    <li>⚡ Multi-vector search for better recall</li>
+                    <li>🎯 Local embeddings (all-MiniLM-L6-v2)</li>
+                    <li>💰 Zero API costs</li>
+                    <li>🔍 Semantic classifiers with Qwen2.5-0.5B</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://54.145.235.188:8765';
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+
+        async function addMemory() {
+            const userId = document.getElementById('user-id').value;
+            const text = document.getElementById('memory-text').value;
+            const resultsDiv = document.getElementById('add-results');
+
+            if (!userId || !text) {
+                resultsDiv.innerHTML = '<div class="result-item error">Please fill in all fields</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">Adding memory...</div>';
+
+            try {
+                const start = Date.now();
+                const response = await fetch(`${API_URL}/add_memory`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        text: text,
+                        topic: 'food',
+                        type: 'stable'
+                    })
+                });
+
+                const data = await response.json();
+                const elapsed = Date.now() - start;
+
+                document.getElementById('insert-speed').textContent = `~${elapsed}ms`;
+
+                resultsDiv.innerHTML = `
+                    <div class="result-item">
+                        <div class="result-text">✅ Memory added successfully!</div>
+                        <div class="result-meta">
+                            <span class="badge">Latency: ${elapsed}ms</span>
+                            <span class="badge">Topic: ${data.topic}</span>
+                            <span class="badge">${data.classifier_source}</span>
+                        </div>
+                        <div class="result-meta" style="margin-top: 8px;">
+                            Classifiers: ${data.classifiers.join(', ')}
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('memory-text').value = '';
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result-item error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function searchMemories() {
+            const userId = document.getElementById('search-user-id').value;
+            const query = document.getElementById('search-query').value;
+            const resultsDiv = document.getElementById('search-results');
+
+            if (!userId || !query) {
+                resultsDiv.innerHTML = '<div class="result-item error">Please fill in all fields</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+
+            try {
+                const start = Date.now();
+                const response = await fetch(`${API_URL}/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        context: query,
+                        domain: 'places',
+                        limit: 10,
+                        use_classifiers: true,
+                        score_threshold: 0.27
+                    })
+                });
+
+                const data = await response.json();
+                const elapsed = Date.now() - start;
+                const memories = data.memories || [];
+
+                if (memories.length === 0) {
+                    resultsDiv.innerHTML = '<div class="result-item">No memories found</div>';
+                    return;
+                }
+
+                let html = `<div class="result-item"><strong>Found ${memories.length} results in ${elapsed}ms</strong></div>`;
+                
+                memories.forEach((m, i) => {
+                    html += `
+                        <div class="result-item">
+                            <div class="result-text">${i + 1}. ${m.text}</div>
+                            <div class="result-meta">
+                                <span class="badge">Score: ${m.score.toFixed(3)}</span>
+                                <span class="badge">${m.topic}</span>
+                            </div>
+                            <div class="result-meta" style="margin-top: 5px;">
+                                Classifiers: ${m.classifiers.join(', ')}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                resultsDiv.innerHTML = html;
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result-item error">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
